@@ -3,7 +3,7 @@ var jd_globe = {
 	origin_price:0,
 	max_price:0,
 	bid_increment:1,
-	time_remain:1855,
+	time_remain:1255,
 	bid_loop:false,
 	mail_free:79,
 	my_price:0,
@@ -16,17 +16,18 @@ var jd_globe = {
 };
 
 //设置DOM元素
-var code = "<div id='qp_div'>"		
-		+ "商品6折价：<input type='text' id='qp_price_limit' readonly />&nbsp;&nbsp;&nbsp;&nbsp;"
-			+ "最高出价<input type='text' id='qp_max_price' />&nbsp;&nbsp;&nbsp;&nbsp;"
-			+ "加价幅度<input type='text' id='qp_bid_increment' style='width:20px' value='1'/>&nbsp;&nbsp;&nbsp;&nbsp;"
-		+ "<input type='button' value='出价' id='qp_btn_start' class='qp_btn'/>&nbsp;&nbsp;&nbsp;&nbsp;"
-		+ "<input type='button' value='定时开抢' id='qp_btn_shedule' class='qp_btn' />&nbsp;&nbsp;&nbsp;&nbsp;"
-		+ "<span id='qp_query'>按 N 键可显示当前价格和时间</span> <span id='qp_info'></span>&nbsp;&nbsp;&nbsp;&nbsp;"
-		+"<input type='text' id='qp_bid_price' style='width:20px' value='1'/>"
-		+ "<input type='button' value='定时出价' id='qp_btn_bid' class='qp_btn' />&nbsp;&nbsp;&nbsp;&nbsp;"
-		+"<input type='checkbox' id='diamond_checkbox' style='width:15px' value='1'/>钻石用户</div>";
+var code = "<div id='qp_div'>"
+	+ "商品6折价：<input type='text' id='qp_price_limit' readonly />&nbsp;&nbsp;&nbsp;&nbsp;"
+	+ "最高出价<input type='text' id='qp_max_price' />&nbsp;&nbsp;&nbsp;&nbsp;"
+	+ "加价幅度<input type='text' id='qp_bid_increment' style='width:20px' value='1'/>&nbsp;&nbsp;&nbsp;&nbsp;"
+	+ "<input type='button' value='出价' id='qp_btn_start' class='qp_btn'/>&nbsp;&nbsp;&nbsp;&nbsp;"
+	+ "<input type='button' value='定时开抢' id='qp_btn_shedule' class='qp_btn' />&nbsp;&nbsp;&nbsp;&nbsp;"
+	+ "<span id='qp_query'>按 N 键可显示当前价格和时间</span> <span id='qp_info'></span>&nbsp;&nbsp;&nbsp;&nbsp;"
+	+"<input type='text' id='qp_bid_price' style='width:20px' value='1'/>"
+	+ "<input type='button' value='定时出价' id='qp_btn_bid' class='qp_btn' />&nbsp;&nbsp;&nbsp;&nbsp;"
+	+"<input type='checkbox' id='diamond_checkbox' style='width:15px' value='1'/>钻石用户</div>";
 $('body').prepend(code);
+
 
 //按钮监听器
 $('#qp_max_price').change(changeMaxPrice);
@@ -34,7 +35,7 @@ $('#qp_bid_increment').change(changeIncrement);
 $('#qp_btn_start').on('click', function(){startBid()});
 $('#qp_btn_shedule').on('click', function(){sheduleBid()});
 $('#qp_bid_price').change(changeFinalPrice);
-$('#qp_btn_bid').on('click', function(){bidPrice()}); 
+$('#qp_btn_bid').on('click', function(){bidPrice()});
 $("#diamond_checkbox").change(checkboxChange);
 
 
@@ -46,23 +47,23 @@ function handleKeyDown(event){
 		//bidWithPrice(16);
 		//bidWithPrice(19);
 		loopQuery();
-	} 
+	}
 	//按下+ 增加最后出价时间
 	if(event.keyCode == 187){
-		jd_globe.time_remain += 100;
+		jd_globe.time_remain += 10;
 		printInfo("保留时间改为："+jd_globe.time_remain);
-	} 
+	}
 	//按下- 减小更改最后出价时间
 	if(event.keyCode == 189) {
-		jd_globe.time_remain -= 100;
+		jd_globe.time_remain -= 10;
 		printInfo("保留时间改为："+jd_globe.time_remain);
 	}
 	//按下N 查询显示当前价格
 	if(event.keyCode == 78) queryPrice(showTime);
 	//按下M 在倒数几秒前生效购买
 	if(event.keyCode == 77){
-		 bidBeforeEnd();
-	} 
+		startBid();
+	}
 }
 function bidBeforeEnd(){
 	if(jd_globe.end_time_mili == -1){
@@ -90,7 +91,7 @@ document.onkeydown = handleKeyDown;
 //初始化
 function init(){
 	jd_globe.paimaiId = $("#paimaiId").val();
-    jd_globe.sku = $("#productId").val();
+	jd_globe.sku = $("#productId").val();
 	loadJdPrice();
 }
 
@@ -104,7 +105,7 @@ function loadJdPrice(){
 			jd_globe.max_price = parseInt(jdPrice*0.6);
 			$('#qp_price_limit').val(jd_globe.max_price);
 			$('#qp_max_price').val(jd_globe.max_price);
-		}		
+		}
 	});
 }
 //定时出价
@@ -113,6 +114,8 @@ function bidPrice(){
 }
 //定时出价回调函数
 function waitToBidPrice(data){
+	$("#qp_btn_bid").val("已开启定时出价");
+	$("#qp_btn_bid").attr("disabled",true);
 	var remainTime = data.remainTime;
 	setTimeout("bidWithPrice(jd_globe.final_Price)",remainTime-1300);
 }
@@ -125,33 +128,33 @@ function startBid(){
 //每60秒重新查询一次，直到距离结束小于60秒时，倒计时自动抢购
 function timerBid(data){
 	var remainTime = data.remainTime;
-	if(remainTime < 3000){
+	printQuery(data);
+	if(remainTime < 10000){
 		setTimeout("startBid()",remainTime - jd_globe.time_remain);
 	}else if(remainTime > 130000){
 		var waitTime = remainTime % 120000;
 		console.log("等待 "+waitTime+"ms调用loopQuery");
-		setTimeout("loopQuery()",waitTime);
+		setTimeout("loopQuery()",120000);
 	}else if(remainTime > 70000){
 		var waitTime = remainTime % 60000;
 		console.log("等待 "+waitTime+"ms调用loopQuery");
-		setTimeout("loopQuery()",waitTime);
+		setTimeout("loopQuery()",60000);
 	}else if(remainTime > 40000){
 		var waitTime = remainTime % 30000;
 		console.log("等待 "+waitTime+"ms调用loopQuery");
-		setTimeout("loopQuery()",waitTime);
+		setTimeout("loopQuery()",3000);
 	}else if(remainTime > 20000){
 		var waitTime = remainTime % 10000;
 		console.log("等待 "+waitTime+"ms调用loopQuery");
-		setTimeout("loopQuery()",waitTime);
-	}else if(remainTime > 13000){
+		setTimeout("loopQuery()",10000);
+	}else if(remainTime > 10000){
 		var waitTime = remainTime % 10000;
 		console.log("等待 "+waitTime+"ms调用loopQuery");
 		setTimeout("loopQuery()",waitTime);
-	}else{
-		var waitTime = remainTime % 3000;
-		console.log("等待 "+waitTime+"ms调用loopQuery");
-		setTimeout("loopQuery()",waitTime);
 	}
+}
+function printQuery(data){
+	printInfo("剩余时间："+data.remainTime+" 当前价格："+data.currentPrice);
 }
 function loopQuery(){
 	console.log("调用loopQuery");
@@ -159,7 +162,7 @@ function loopQuery(){
 }
 
 //定时开始抢购
-function sheduleBid(){	
+function sheduleBid(){
 	$("#qp_btn_shedule").val("已开启定时");
 	$("#qp_btn_shedule").attr("disabled",true);
 	//多次倒计时
@@ -176,7 +179,7 @@ function setTimerWithData(data){
 	setTimer(remainTime-jd_globe.time_remain);
 }
 //设定倒计时
-function setTimer(time){	
+function setTimer(time){
 	printInfo("等待时长："+time);
 	setTimeout("queryAndBid()",time);
 }
@@ -218,24 +221,24 @@ function bidWithCurrentPrice(price){
 //根据给定价格出价
 function bidWithPrice(price){
 	var url = "/services/bid.action";
-	var data = {paimaiId:jd_globe.paimaiId,price:price,proxyFlag:0,bidSource:5};		
+	var data = {paimaiId:jd_globe.paimaiId,price:price,proxyFlag:0,bidSource:5};
 	var start = new Date().getTime();
 	jQuery.getJSON(url,data,function(jqXHR){
 		printInfo("出价："+price);
 		var end = new Date().getTime();
-		printInfo("出价用时" + (end - start));	
+		printInfo("出价用时" + (end - start));
 		if(jqXHR!=undefined){
 			if(jqXHR.result=='200'){
 				printInfo("出价成功，时间为："+new Date().getTime());
-				printInfo("恭喜您，出价成功,价格为："+price);				
+				printInfo("恭喜您，出价成功,价格为："+price);
 				printInfo("出价时间：" + new Date(new Date().getTime()+91000).toLocaleTimeString());
-				jd_globe.my_price = price;	
-				
+				jd_globe.my_price = price;
+
 			}else if(jqXHR.result=='517'){
 				//当前价格
 				jd_globe.my_price = price;
 				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
-				
+
 			}else if(jqXHR.result=='514'){
 				//小于当前价格
 				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
@@ -243,27 +246,27 @@ function bidWithPrice(price){
 				requestAnimationFrame(queryAndBid);
 				//continueBid(price);
 			}else if(jqXHR.result=='515'){
-				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);	
+				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
 			}else if(jqXHR.result=='516'){
 				//拍卖已经结束
-				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);	
+				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
 			}else if(jqXHR.result=='525'){
 				//同一用户连续出价
-				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);	
+				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
 				jd_globe.my_price = jd_globe.current_price;
 				//继续查询并出价
 				//requestAnimationFrame(queryAndBid);
 				//queryAndBid();
 			}else if(jqXHR.result=='561'){
 				//所出价格低于当前价
-				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);	
+				printInfo(jqXHR.message+"；错误代码:"+jqXHR.result);
 				//如果当前价是最高价，则不再出价
 				requestAnimationFrame(queryAndBid);
 				//continueBid(price);
 			}else{
-				printInfo("未捕捉错误："+jqXHR.message+"；错误代码:"+jqXHR.result);									
-			}				
-		}							
+				printInfo("未捕捉错误："+jqXHR.message+"；错误代码:"+jqXHR.result);
+			}
+		}
 	});
 }
 //价格低于当前价，加价再出，追加出价
@@ -288,7 +291,7 @@ function showTime(data){
 function queryPrice(callback){
 	var queryIt = "http://paimai.jd.com/json/current/englishquery?paimaiId="+jd_globe.paimaiId+"&skuId=0&start=0&end=0";
 	jQuery.getJSON(queryIt,function(jqXHR){
-		console.log("服务器用时"+(jd_globe.server_start_remainTime-jqXHR.remainTime)+",还有"+jqXHR.remainTime+"ms结束")
+		console.log("服务器用时"+(jd_globe.server_start_remainTime-jqXHR.remainTime)+",还有"+jqXHR.remainTime+"ms结束，当前价格为："+jqXHR.currentPrice);
 		jd_globe.current_price = jqXHR.currentPrice;
 		callback(jqXHR);
 	});
@@ -296,12 +299,12 @@ function queryPrice(callback){
 //抢购循环
 function tick(){
 	if(jd_globe.bid_loop) requestAnimationFrame(tick);
-	queryAndBid();	
+	queryAndBid();
 }
 //更改包邮价
 function checkboxChange(){
 	if($('#diamond_checkbox').is(':checked')) {
-		jd_globe.mail_free = 59;		
+		jd_globe.mail_free = 59;
 	}else{
 		jd_globe.mail_free = 79;
 	}
@@ -315,7 +318,7 @@ function changeIncrement(){
 }
 //更改最高价
 function changeMaxPrice(){
-	jd_globe.max_price = $('#qp_max_price').val();	
+	jd_globe.max_price = $('#qp_max_price').val();
 	printInfo("最高出价：" + jd_globe.max_price);
 }
 //更改定时出价的价格
